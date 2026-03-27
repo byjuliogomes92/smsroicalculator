@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Calculadora de ROI para campanhas de SMS Marketing. Por Júlio Cesar Gomes — MarTech em Mar Aberto.">
+<title>SMS ROI Calculator — MarTech em Mar Aberto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0f0f;--bg2:#161616;--bg3:#1e1e1e;--bg4:#242424;
+  --border:#2a2a2a;--border2:#333;
+  --text:#f0f0f0;--text2:#888;--text3:#555;
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.08);
+  --amber:#f59e0b;--red:#ef4444;--red-bg:rgba(239,68,68,0.08);
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:100}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.brand{display:flex;align-items:center;gap:12px}
+.signal{display:flex;align-items:flex-end;gap:2px;height:16px}
+.sig-b{width:3px;background:var(--green);border-radius:1px}
+.sig-b:nth-child(1){height:4px}.sig-b:nth-child(2){height:7px}.sig-b:nth-child(3){height:11px}.sig-b:nth-child(4){height:15px}
+.brand-name{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:14px;letter-spacing:-.01em}
+.brand-name span{color:var(--green)}
+.topbar-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.clock{font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);letter-spacing:2px}
+.btn-follow{font-size:12px;font-weight:500;color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:6px 14px;border-radius:20px;background:var(--green-bg);transition:all .2s;cursor:pointer;white-space:nowrap;display:inline-block}
+.btn-follow:hover{background:var(--green);color:#000;border-color:var(--green)}
+
+.wrap{max-width:900px;margin:0 auto;padding:0 20px}
+
+.hero{padding:48px 0 32px}
+.hero-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(2rem,5vw,3.2rem);line-height:1.1;letter-spacing:-.03em;margin-bottom:14px}
+.hero h1 em{color:var(--green);font-style:normal}
+.hero-sub{font-size:15px;color:var(--text2);max-width:480px;line-height:1.7}
+.blink{display:inline-block;width:2px;height:1.1em;background:var(--green);vertical-align:text-bottom;margin-left:2px;animation:blink 1.2s step-end infinite}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+.divider{border:none;border-top:1px solid var(--border);margin:0}
+.scenario-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding:20px 0 0}
+.stab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:7px 16px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.stab:hover{border-color:var(--text2);color:var(--text)}
+.stab.active{background:var(--green);border-color:var(--green);color:#000;font-weight:500}
+
+.layout{display:grid;grid-template-columns:1fr 290px;gap:12px;margin-bottom:12px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--border)}
+.card-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.card-body{padding:16px}
+
+.sl-g{margin-bottom:16px}
+.sl-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.sl-label{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.tip{width:14px;height:14px;border-radius:50%;border:1px solid var(--border2);display:inline-flex;align-items:center;justify-content:center;font-size:8px;color:var(--text3);cursor:help;position:relative;flex-shrink:0;font-family:'DM Mono',monospace}
+.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-family:'DM Sans',sans-serif;padding:7px 10px;border-radius:var(--radius-sm);white-space:normal;min-width:160px;max-width:200px;text-align:left;line-height:1.5;pointer-events:none;opacity:0;transition:opacity .15s;z-index:50}
+.tip:hover::after{opacity:1}
+.sl-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 10px;min-width:88px;text-align:center;white-space:nowrap}
+.sl-hint{font-size:11px;color:var(--text3);margin-top:4px}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border2);border-radius:1px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--green);border:3px solid var(--bg2);box-shadow:0 0 0 1px var(--green);transition:box-shadow .15s;cursor:pointer}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 4px rgba(34,197,94,0.2)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--green);border:3px solid var(--bg2);cursor:pointer}
+.sep{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+.result-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+@media(min-width:721px){.result-card{position:sticky;top:68px}}
+.result-screen{background:var(--bg);padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.roi-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.roi-val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(40px,10vw,56px);line-height:1;color:var(--green);margin-bottom:6px;transition:color .3s;letter-spacing:-.03em}
+.roi-sub{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+.metric-list{padding:4px 0}
+.m-row{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border);gap:8px}
+.m-row:last-child{border-bottom:none}
+.m-key{font-size:12px;color:var(--text2)}
+.m-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--text);text-align:right;font-weight:500}
+.m-val.green{color:var(--green)}.m-val.amber{color:var(--amber)}.m-val.red{color:var(--red)}
+.verdict{padding:12px 16px;font-size:12px;font-family:'DM Mono',monospace;letter-spacing:.04em;text-align:center;border-top:1px solid var(--border);transition:all .3s}
+.verdict.great{background:var(--green-bg);color:var(--green)}
+.verdict.good{background:rgba(245,158,11,0.08);color:var(--amber)}
+.verdict.warn{background:var(--red-bg);color:var(--red)}
+
+.sec-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+@media(max-width:560px){.compare-grid{grid-template-columns:1fr}}
+.ch-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative}
+.ch-card.winner{border-color:rgba(34,197,94,0.4)}
+.ch-card.winner::after{content:'MELHOR ROI';position:absolute;top:-1px;right:12px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;background:var(--green);color:#000;padding:2px 7px;border-radius:0 0 4px 4px}
+.ch-name{font-size:13px;font-weight:500;margin-bottom:12px;color:var(--text2)}
+.ch-big{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.02em;color:var(--text);line-height:1;margin-bottom:4px}
+.ch-big.dim{color:var(--text3)}
+.ch-sub{font-size:11px;color:var(--text3);margin-bottom:10px;font-family:'DM Mono',monospace}
+.bar-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.bar-fill.dim{background:var(--border2)}
+.ch-meta{margin-top:10px;font-size:11px;color:var(--text3);display:flex;flex-direction:column;gap:2px;font-family:'DM Mono',monospace}
+.ch-meta span{display:flex;justify-content:space-between}
+
+.breakdown-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.bd-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border)}
+.bd-row:last-child{border-bottom:none}
+.bd-row.hd{background:var(--bg3);padding:8px 16px}
+.bd-row.tot{background:rgba(34,197,94,0.04)}
+.bd-stage{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+.bd-icon{width:20px;text-align:center;font-size:14px}
+.bd-num{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--text);text-align:right;white-space:nowrap}
+.bd-num.green{color:var(--green)}.bd-num.amber{color:var(--amber)}
+.bd-pct{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:right;min-width:44px;white-space:nowrap}
+.bd-pct.green{color:var(--green)}
+.hd-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
+
+.flow-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.flow-steps{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;padding:20px 16px}
+@media(max-width:560px){.flow-steps{grid-template-columns:1fr;gap:10px}.flow-arrow{display:none}}
+.flow-step{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center}
+.flow-arrow{text-align:center;font-size:16px;color:var(--text3)}
+.f-icon{font-size:20px;margin-bottom:8px}
+.f-name{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.f-metric{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.02em;color:var(--text)}
+.f-metric.green{color:var(--green)}.f-metric.amber{color:var(--amber)}
+.f-sub{font-size:11px;color:var(--text3);margin-top:3px}
+
+.insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:480px){.insights-grid{grid-template-columns:1fr}}
+.insight{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.ins-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.ins-body{font-size:12px;color:var(--text2);line-height:1.6}
+.ins-body strong{color:var(--text);font-weight:500}
+.ins-body .warn{color:var(--red)}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding:20px 0}
+.btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:9px 18px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--text2);color:var(--text)}
+.btn.primary{background:var(--green);border-color:var(--green);color:#000}
+.btn.primary:hover{opacity:.88}
+
+.footer{border-top:1px solid var(--border);padding:24px 0 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.footer-txt{font-size:12px;color:var(--text3);line-height:1.8}
+.footer-txt a{color:var(--text2)}.footer-txt a:hover{color:var(--green)}
+.sms-counter{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:right;line-height:1.8}
+.sms-counter strong{color:var(--green)}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.4);transform:translateY(70px);opacity:0;transition:all .25s}
+.toast.show{transform:translateY(0);opacity:1}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.hero{animation:fadeUp .5s ease both}
+.scenario-row{animation:fadeUp .4s .06s ease both}
+.layout{animation:fadeUp .4s .1s ease both}
+.compare-grid{animation:fadeUp .4s .14s ease both}
+.breakdown-card{animation:fadeUp .4s .18s ease both}
+.flow-card{animation:fadeUp .4s .22s ease both}
+.insights-grid{animation:fadeUp .4s .26s ease both}
+.actions{animation:fadeUp .4s .3s ease both}
+
+@media(max-width:480px){.hero h1{font-size:2rem}.btn{font-size:12px;padding:8px 14px}.bd-stage{font-size:12px}.bd-num{font-size:13px}}
+@media(max-width:360px){.wrap{padding:0 12px}.brand-name{font-size:12px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="topbar-inner">
+      <a href="https://www.linkedin.com/in/byjuliogomes/" target="_blank" rel="noopener" class="brand">
+        <div class="signal">
+          <div class="sig-b"></div><div class="sig-b"></div>
+          <div class="sig-b"></div><div class="sig-b"></div>
+        </div>
+        <div class="brand-name">MarTech <span>em Mar Aberto</span></div>
+      </a>
+      <div class="topbar-right">
+        <div class="clock" id="clock">00:00</div>
+        <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7425648213799575552" target="_blank" rel="noopener" class="btn-follow">+ Seguir newsletter</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-tag">Ferramenta gratuita · SMS Marketing · BR / LATAM</div>
+    <h1>Calculadora de ROI<br><em>SMS Marketing</em><span class="blink"></span></h1>
+    <p class="hero-sub">Simule o retorno das suas campanhas, compare canais e descubra se SMS faz sentido para a sua operação.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="scenario-row">
+    <button class="stab" onclick="setScenario('conservador',this)">Conservador</button>
+    <button class="stab active" onclick="setScenario('realista',this)">Realista</button>
+    <button class="stab" onclick="setScenario('otimista',this)">Otimista</button>
+    <button class="stab" onclick="setScenario('custom',this)">Personalizado</button>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Parâmetros da campanha</div></div>
+      <div class="card-body">
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">Lista de contatos <span class="tip" data-tip="Total com opt-in SMS válido">?</span></div>
+            <div class="sl-val" id="v-list">10.000</div>
+          </div>
+          <input type="range" id="s-list" min="500" max="500000" step="500" value="10000" oninput="update()">
+          <div class="sl-hint">contatos com opt-in SMS</div>
+        </div>
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">Custo por SMS <span class="tip" data-tip="Mercado BR: R$ 0,04 a R$ 0,15 por mensagem">?</span></div>
+            <div class="sl-val" id="v-cpm">R$ 0,10</div>
+          </div>
+          <input type="range" id="s-cpm" min="4" max="20" step="1" value="10" oninput="update()">
+          <div class="sl-hint">média BR: R$ 0,06 – R$ 0,15</div>
+        </div>
+
+        <hr class="sep">
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">Taxa de abertura <span class="tip" data-tip="% que abre o SMS. Benchmark BR: 90–98%">?</span></div>
+            <div class="sl-val" id="v-open">95%</div>
+          </div>
+          <input type="range" id="s-open" min="50" max="99" step="1" value="95" oninput="update()">
+        </div>
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">CTR — cliques no link <span class="tip" data-tip="% que clica no link. Benchmark Américas: ~12%">?</span></div>
+            <div class="sl-val" id="v-ctr">12%</div>
+          </div>
+          <input type="range" id="s-ctr" min="1" max="50" step="1" value="12" oninput="update()">
+        </div>
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">Taxa de conversão <span class="tip" data-tip="% dos clicantes que compram. Benchmark: 6–8%">?</span></div>
+            <div class="sl-val" id="v-conv">7%</div>
+          </div>
+          <input type="range" id="s-conv" min="1" max="30" step="1" value="7" oninput="update()">
+        </div>
+
+        <hr class="sep">
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">Ticket médio <span class="tip" data-tip="Valor médio de cada venda gerada pela campanha">?</span></div>
+            <div class="sl-val" id="v-ticket">R$ 120</div>
+          </div>
+          <input type="range" id="s-ticket" min="20" max="5000" step="10" value="120" oninput="update()">
+        </div>
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">Margem do produto <span class="tip" data-tip="% de margem bruta sobre o ticket médio">?</span></div>
+            <div class="sl-val" id="v-margin">40%</div>
+          </div>
+          <input type="range" id="s-margin" min="5" max="90" step="5" value="40" oninput="update()">
+        </div>
+
+        <hr class="sep">
+
+        <div class="sl-g">
+          <div class="sl-top">
+            <div class="sl-label">Opt-out esperado <span class="tip" data-tip="% que se descadastra. Ideal: &lt;2%. Alerta: &gt;5%">?</span></div>
+            <div class="sl-val" id="v-optout">2%</div>
+          </div>
+          <input type="range" id="s-optout" min="0" max="20" step="1" value="2" oninput="update()">
+          <div class="sl-hint">acima de 5%: revisar segmentação urgente</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="card-hd"><div class="card-title">Resultado estimado</div></div>
+      <div class="result-screen">
+        <div class="roi-label">ROI da campanha</div>
+        <div class="roi-val" id="r-roi">—<span class="blink"></span></div>
+        <div class="roi-sub" id="r-roi-sub">calculando...</div>
+      </div>
+      <div class="metric-list">
+        <div class="m-row"><div class="m-key">Custo total</div><div class="m-val" id="r-cost">—</div></div>
+        <div class="m-row"><div class="m-key">Mensagens abertas</div><div class="m-val" id="r-opens">—</div></div>
+        <div class="m-row"><div class="m-key">Cliques gerados</div><div class="m-val" id="r-clicks">—</div></div>
+        <div class="m-row"><div class="m-key">Conversões</div><div class="m-val green" id="r-convs">—</div></div>
+        <div class="m-row"><div class="m-key">Receita bruta</div><div class="m-val green" id="r-rev">—</div></div>
+        <div class="m-row"><div class="m-key">Lucro líquido</div><div class="m-val green" id="r-profit">—</div></div>
+        <div class="m-row"><div class="m-key">Custo por venda</div><div class="m-val amber" id="r-cpa">—</div></div>
+        <div class="m-row"><div class="m-key">Opt-outs estimados</div><div class="m-val" id="r-optout">—</div></div>
+      </div>
+      <div class="verdict" id="verdict">—</div>
+    </div>
+  </div>
+
+  <div class="sec-label">Comparativo de canais — mesma lista e ticket</div>
+  <div class="compare-grid">
+    <div class="ch-card winner">
+      <div class="ch-name">📱 SMS</div>
+      <div class="ch-big" id="cc-sms-rev">—</div>
+      <div class="ch-sub">receita estimada</div>
+      <div class="bar-track"><div class="bar-fill" id="bar-sms" style="width:100%"></div></div>
+      <div class="ch-meta">
+        <span><span>Conversões</span><span id="cc-sms-conv">—</span></span>
+        <span><span>Custo</span><span id="cc-sms-cost">—</span></span>
+      </div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-name">✉️ Email</div>
+      <div class="ch-big dim" id="cc-email-rev">—</div>
+      <div class="ch-sub">receita estimada</div>
+      <div class="bar-track"><div class="bar-fill dim" id="bar-email" style="width:20%"></div></div>
+      <div class="ch-meta">
+        <span><span>Conversões</span><span id="cc-email-conv">—</span></span>
+        <span><span>Custo</span><span id="cc-email-cost">—</span></span>
+      </div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-name">💬 WhatsApp</div>
+      <div class="ch-big dim" id="cc-wpp-rev">—</div>
+      <div class="ch-sub">receita estimada</div>
+      <div class="bar-track"><div class="bar-fill dim" id="bar-wpp" style="width:35%"></div></div>
+      <div class="ch-meta">
+        <span><span>Conversões</span><span id="cc-wpp-conv">—</span></span>
+        <span><span>Custo</span><span id="cc-wpp-cost">—</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">Funil detalhado</div>
+  <div class="breakdown-card">
+    <div class="bd-row hd">
+      <div class="hd-label">Etapa</div>
+      <div class="hd-label" style="text-align:right">Quantidade</div>
+      <div class="hd-label" style="text-align:right">% base</div>
+    </div>
+    <div class="bd-row"><div class="bd-stage"><span class="bd-icon">📤</span>Disparadas</div><div class="bd-num" id="bd-sent">—</div><div class="bd-pct">100%</div></div>
+    <div class="bd-row"><div class="bd-stage"><span class="bd-icon">📨</span>Entregues</div><div class="bd-num" id="bd-delivered">—</div><div class="bd-pct green">97%</div></div>
+    <div class="bd-row"><div class="bd-stage"><span class="bd-icon">👁</span>Abertas</div><div class="bd-num" id="bd-opens">—</div><div class="bd-pct green" id="bd-open-pct">—</div></div>
+    <div class="bd-row"><div class="bd-stage"><span class="bd-icon">🖱</span>Cliques</div><div class="bd-num" id="bd-clicks">—</div><div class="bd-pct" id="bd-click-pct">—</div></div>
+    <div class="bd-row"><div class="bd-stage"><span class="bd-icon">✅</span>Conversões</div><div class="bd-num green" id="bd-convs">—</div><div class="bd-pct green" id="bd-conv-pct">—</div></div>
+    <div class="bd-row tot"><div class="bd-stage"><span class="bd-icon">💰</span>Receita gerada</div><div class="bd-num amber" id="bd-rev">—</div><div class="bd-pct green" id="bd-roi-label">—</div></div>
+  </div>
+
+  <div class="sec-label">Simulador multicanal — carrinho abandonado</div>
+  <div class="flow-card">
+    <div class="card-hd"><div class="card-title">Fluxo recomendado: email (30 min) → SMS (48h)</div></div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="f-icon">✉️</div>
+        <div class="f-name">Toque 1 · Email</div>
+        <div class="f-metric" id="flow-email-conv">—</div>
+        <div class="f-sub">recuperados</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="f-icon">📱</div>
+        <div class="f-name">Toque 2 · SMS</div>
+        <div class="f-metric amber" id="flow-sms-conv">—</div>
+        <div class="f-sub">adicionais</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="f-icon">🎯</div>
+        <div class="f-name">Resultado total</div>
+        <div class="f-metric green" id="flow-total">—</div>
+        <div class="f-sub" id="flow-rev">+20–30% vs canal único</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">Insights automáticos</div>
+  <div class="insights-grid" id="insights-grid"></div>
+
+  <div class="divider"></div>
+
+  <div class="actions">
+    <button class="btn primary" onclick="copyResult()">📋 Copiar resultado</button>
+    <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7425648213799575552" target="_blank" rel="noopener" class="btn">📰 Seguir newsletter</a>
+    <button class="btn" onclick="shareResult()">🔗 Compartilhar</button>
+  </div>
+
+  <div class="footer">
+    <div class="footer-txt">
+      Ferramenta por <a href="https://www.linkedin.com/in/byjuliogomes/" target="_blank">Júlio Cesar Gomes</a> ·
+      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7425648213799575552" target="_blank">MarTech em Mar Aberto</a><br>
+      Benchmarks BR/LATAM 2024–2025. Use como referência de ordem de grandeza.
+    </div>
+    <div class="sms-counter">
+      <strong id="msg-count">1</strong> / 160 caracteres<br>SMS não cobrado 😄
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function tick(){var n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0');document.getElementById('clock').textContent=h+':'+m}
+tick();setInterval(tick,1000);
+var mc=1;setInterval(function(){mc=mc>=160?1:mc+1;var e=document.getElementById('msg-count');if(e)e.textContent=mc},200);
+
+var SC={
+  conservador:{list:5000,cpm:15,open:85,ctr:8,conv:3,ticket:80,margin:30,optout:5},
+  realista:{list:10000,cpm:10,open:95,ctr:12,conv:7,ticket:120,margin:40,optout:2},
+  otimista:{list:25000,cpm:8,open:98,ctr:20,conv:12,ticket:200,margin:50,optout:1}
+};
+function setScenario(key,el){
+  document.querySelectorAll('.stab').forEach(function(b){b.classList.remove('active')});
+  el.classList.add('active');
+  if(key==='custom'){update();return}
+  var s=SC[key];
+  ['list','cpm','open','ctr','conv','ticket','margin','optout'].forEach(function(k){document.getElementById('s-'+k).value=s[k]});
+  update();
+}
+function fN(n){if(n>=1e6)return(n/1e6).toFixed(1).replace('.',',')+' M';if(n>=1000)return(n/1000).toFixed(1).replace('.',',')+' k';return Math.round(n).toLocaleString('pt-BR')}
+function fR(n){if(n>=1e6)return'R$ '+(n/1e6).toFixed(2).replace('.',',')+' M';if(n>=1000)return'R$ '+(n/1000).toFixed(1).replace('.',',')+' k';return'R$ '+Math.round(n)}
+function fP(n){return Math.round(n)+'%'}
+function $s(id,v){var e=document.getElementById(id);if(e)e.textContent=v}
+
+function update(){
+  var list=+document.getElementById('s-list').value,cpm=+document.getElementById('s-cpm').value/100;
+  var open=+document.getElementById('s-open').value/100,ctr=+document.getElementById('s-ctr').value/100;
+  var conv=+document.getElementById('s-conv').value/100,ticket=+document.getElementById('s-ticket').value;
+  var margin=+document.getElementById('s-margin').value/100,optout=+document.getElementById('s-optout').value/100;
+
+  $s('v-list',list.toLocaleString('pt-BR'));$s('v-cpm','R$ '+cpm.toFixed(2).replace('.',','));
+  $s('v-open',fP(Math.round(open*100)));$s('v-ctr',fP(Math.round(ctr*100)));
+  $s('v-conv',fP(Math.round(conv*100)));$s('v-ticket','R$ '+ticket);
+  $s('v-margin',fP(Math.round(margin*100)));$s('v-optout',fP(Math.round(optout*100)));
+
+  var cost=list*cpm,delivered=list*0.97,opens=delivered*open,clicks=opens*ctr;
+  var convs=clicks*conv,revenue=convs*ticket,profit=(revenue*margin)-cost;
+  var roi=cost>0?(profit/cost)*100:0,cpa=convs>0?cost/convs:0,optouts=list*optout;
+
+  var roiEl=document.getElementById('r-roi');
+  roiEl.innerHTML=fP(Math.round(roi))+'<span class="blink"></span>';
+  roiEl.style.color=roi>500?'var(--green)':roi>100?'var(--amber)':'var(--red)';
+  $s('r-roi-sub',(profit>=0?'↑ lucro ':'↓ prejuízo ')+fR(Math.abs(profit)));
+  $s('r-cost',fR(cost));$s('r-opens',fN(Math.round(opens)));$s('r-clicks',fN(Math.round(clicks)));
+  $s('r-convs',fN(Math.round(convs))+' vendas');$s('r-rev',fR(revenue));
+  $s('r-profit',fR(profit));$s('r-cpa',fR(cpa));$s('r-optout',fN(Math.round(optouts))+' contatos');
+
+  var vd=document.getElementById('verdict');
+  if(roi>500){vd.className='verdict great';vd.textContent='✓ Excelente — SMS justifica o investimento'}
+  else if(roi>100){vd.className='verdict good';vd.textContent='↑ Positivo — vale testar com segmento menor primeiro'}
+  else if(roi>0){vd.className='verdict warn';vd.textContent='→ Marginal — revise ticket médio ou segmentação'}
+  else{vd.className='verdict warn';vd.textContent='✗ Negativo — ajuste os parâmetros antes de disparar'}
+
+  $s('bd-sent',fN(list));$s('bd-delivered',fN(Math.round(delivered)));
+  $s('bd-opens',fN(Math.round(opens)));$s('bd-open-pct',fP(Math.round(open*100)));
+  $s('bd-clicks',fN(Math.round(clicks)));$s('bd-click-pct',fP(Math.round(clicks/list*100)));
+  $s('bd-convs',fN(Math.round(convs)));$s('bd-conv-pct',fP(Math.round(convs/list*100)));
+  $s('bd-rev',fR(revenue));$s('bd-roi-label','ROI '+fP(Math.round(roi)));
+
+  var eC=list*0.22*0.025*0.025,eR=eC*ticket,eCost=list*0.002;
+  var wC=list*0.88*0.06*0.04,wR=wC*ticket,wCost=list*0.08;
+  var maxR=Math.max(revenue,eR,wR,1);
+  $s('cc-sms-rev',fR(revenue));$s('cc-sms-conv',fN(Math.round(convs)));$s('cc-sms-cost',fR(cost));
+  $s('cc-email-rev',fR(eR));$s('cc-email-conv',fN(Math.round(eC)));$s('cc-email-cost',fR(eCost));
+  $s('cc-wpp-rev',fR(wR));$s('cc-wpp-conv',fN(Math.round(wC)));$s('cc-wpp-cost',fR(wCost));
+  document.getElementById('bar-sms').style.width=Math.round(revenue/maxR*100)+'%';
+  document.getElementById('bar-email').style.width=Math.round(eR/maxR*100)+'%';
+  document.getElementById('bar-wpp').style.width=Math.round(wR/maxR*100)+'%';
+
+  var fE=list*0.05,fS=(list-fE)*0.07,fT=fE+fS;
+  $s('flow-email-conv',fN(Math.round(fE)));$s('flow-sms-conv',fN(Math.round(fS)));
+  $s('flow-total',fN(Math.round(fT)));$s('flow-rev',fR(fT*ticket)+' receita combinada');
+
+  var be=Math.max(1,Math.ceil(cost/Math.max(revenue/Math.max(convs,1),1)));
+  var items=[
+    {icon:'💡',title:'Custo por venda',body:'Cada conversão custou <strong>'+fR(cpa)+'</strong>. Compare com seu CAC atual para validar o canal.'},
+    {icon:optout>0.05?'⚠️':'✅',title:'Saúde da base',body:optout>0.05?'<span class="warn">Opt-out em '+fP(Math.round(optout*100))+' — acima do ideal. Revise a segmentação antes do próximo envio.</span>':'Opt-out em '+fP(Math.round(optout*100))+' — dentro do ideal. Base saudável.'},
+    {icon:'📐',title:'Break-even',body:'Você precisa de <strong>'+fN(be)+' vendas</strong> para cobrir o custo desta campanha.'},
+    roi>200?{icon:'🔁',title:'Frequência sugerida',body:'ROI positivo permite <strong>1–2 campanhas/mês</strong> para o mesmo segmento sem degradar a base.'}:{icon:'🎯',title:'Como melhorar',body:'Aumente o <strong>ticket médio</strong>, melhore a <strong>segmentação</strong> ou negocie um <strong>custo por SMS</strong> menor.'}
+  ];
+  document.getElementById('insights-grid').innerHTML=items.map(function(i){
+    return'<div class="insight"><div class="ins-title"><span>'+i.icon+'</span>'+i.title+'</div><div class="ins-body">'+i.body+'</div></div>';
+  }).join('');
+}
+
+function copyResult(){
+  var t='📱 SMS ROI Calculator — MarTech em Mar Aberto\n'
+    +'─────────────────────────────\n'
+    +'Lista: '+document.getElementById('v-list').textContent+' contatos\n'
+    +'Ticket: '+document.getElementById('v-ticket').textContent+'\n'
+    +'Custo: '+document.getElementById('r-cost').textContent+'\n'
+    +'Conversões: '+document.getElementById('r-convs').textContent+'\n'
+    +'Receita: '+document.getElementById('r-rev').textContent+'\n'
+    +'Lucro: '+document.getElementById('r-profit').textContent+'\n'
+    +'ROI: '+document.getElementById('r-roi').textContent+'\n'
+    +'─────────────────────────────\n'
+    +'Calcule o seu → '+window.location.href+'\n'
+    +'Por Júlio Cesar Gomes · linkedin.com/in/byjuliogomes/';
+  navigator.clipboard.writeText(t).then(function(){toast('✓ Resultado copiado! Cole no LinkedIn.')}).catch(function(){toast('Copie o link manualmente.')});
+}
+function shareResult(){
+  if(navigator.share){navigator.share({title:'SMS ROI Calculator — MarTech em Mar Aberto',text:'Calcule o ROI das suas campanhas de SMS marketing.',url:window.location.href})}
+  else{navigator.clipboard.writeText(window.location.href).then(function(){toast('✓ Link copiado!')})}
+}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000)}
+
+update();
+</script>
+</body>
+</html>
